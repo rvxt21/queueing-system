@@ -17,7 +17,7 @@ type ticketsTable struct {
 	postgres.Table
 
 	// Columns
-	ID        postgres.ColumnInteger
+	ID        postgres.ColumnString
 	Number    postgres.ColumnString
 	Service   postgres.ColumnString
 	Status    postgres.ColumnString
@@ -64,7 +64,7 @@ func newTicketsTable(schemaName, tableName, alias string) *TicketsTable {
 
 func newTicketsTableImpl(schemaName, tableName, alias string) ticketsTable {
 	var (
-		IDColumn        = postgres.IntegerColumn("id")
+		IDColumn        = postgres.StringColumn("id")
 		NumberColumn    = postgres.StringColumn("number")
 		ServiceColumn   = postgres.StringColumn("service")
 		StatusColumn    = postgres.StringColumn("status")
