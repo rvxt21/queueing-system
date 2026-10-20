@@ -1,0 +1,30 @@
+version: '3'
+dotenv:
+  - '.env'
+
+
+tasks:
+  lint:
+    desc: Run linters against the codebase.
+    cmds:
+      - golangci-lint run --fix ./...
+  
+  migrate-up:
+    desc: Run db migration
+    aliases: [ mgup ]
+    env:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "postgres://{{.POSTGRES_USER}}:{{.POSTGRES_PASSWORD}}@{{.POSTGRES_HOST}}:{{.POSTGRES_PORT}}/{{.POSTGRES_DB}}?sslmode=disable"
+    cmds:
+    - goose -dir ./migrations up
+    - jet -dsn="$GOOSE_DBSTRING" -schema=ticketing -path=./internal/database/gen
+  
+  migrate-down:
+    desc: Roll back the last db migration.
+    aliases: [ mgdwn ]
+    env:
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: "postgres://{{.POSTGRES_USER}}:{{.POSTGRES_PASSWORD}}@{{.POSTGRES_HOST}}:{{.POSTGRES_PORT}}/{{.POSTGRES_DB}}?sslmode=disable"
+    cmds:
+      - goose -dir ./migrations down
+      - jet -dsn="$GOOSE_DBSTRING" -schema=ticketing -path=./internal/database/gen

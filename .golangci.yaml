@@ -1,0 +1,87 @@
+version: "2"
+
+run:
+  concurrency: 4
+  modules-download-mode: readonly
+  issues-exit-code: 1
+  tests: true
+
+linters:
+  default: all
+  disable:
+    - containedctx
+    - dogsled
+    - godox
+    - cyclop
+    - decorder
+    - dupword
+    - funcorder
+    - errchkjson
+    - forbidigo
+    - funlen
+    - gocognit
+    - gomodguard
+    - exhaustruct
+    - depguard
+    - goconst
+    - gocyclo
+    - interfacebloat
+    - ireturn
+    - lll
+    - nestif
+    - nlreturn
+    - paralleltest
+    - testpackage
+    - wsl
+    - wrapcheck
+    - varnamelen
+    - tagliatelle
+    - noinlineerr
+    - gochecknoglobals
+    - unqueryvet
+    - exhaustruct_v5
+    - gochecknoinits
+  settings:
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+      disabled-checks:
+        - hugeParam
+        - rangeExprCopy
+        - rangeValCopy
+    errcheck:
+      check-type-assertions: true
+    govet:
+      disable:
+        - fieldalignment
+    revive:
+      enable-default-rules: true
+      rules:
+        - name: exported
+          disabled: true
+        - name: package-comments
+          disabled: true
+        - name: unused-parameter
+          disabled: true
+
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - swaggo
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+    gofumpt:
+      extra-rules: true
+  exclusions:
+    warn-unused: true
+    generated: lax
+    paths:
+      - migrations
