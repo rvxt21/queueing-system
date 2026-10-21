@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"time"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
@@ -10,6 +11,16 @@ import (
 type Config struct {
 	RabbitMQ
 	Postgres
+	HTTP
+
+	LogLevel string `env:"LOG_LEVEL" envDefault:"info"`
+}
+
+type HTTP struct {
+	Host               string        `env:"HTTP_HOST"                 envDefault:"localhost"`
+	Port               string        `env:"HTTP_PORT"                 envDefault:"1111"`
+	ReadTimeout        time.Duration `env:"HTTP_READ_TIMEOUT"         envDefault:"10s"`
+	HealthCheckTimeout time.Duration `env:"HTTP_HEALTH_CHECK_TIMEOUT" envDefault:"3s"`
 }
 
 type RabbitMQ struct {

@@ -9,6 +9,12 @@ tasks:
     cmds:
       - golangci-lint run --fix ./...
   
+  docs:
+    desc: Generate OpenAPI (Swagger) docs from handler comments.
+    cmds:
+      - swag fmt
+      - swag init -g main.go -o docs
+  
   migrate-up:
     desc: Run db migration
     aliases: [ mgup ]

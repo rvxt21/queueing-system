@@ -1,0 +1,49 @@
+basePath: /
+definitions:
+  dto.ServicesResponse:
+    properties:
+      id:
+        example: 01a15d53-a46f-762b-bebd-4232ae144e8a
+        format: uuid
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: Apply for a new passport
+        type: string
+      service_code:
+        example: passport_new
+        type: string
+    type: object
+  handlers.errorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: 'API for the queueing system: services, tickets and queue status.'
+  title: Queueing System API
+  version: "1.0"
+paths:
+  /services:
+    get:
+      description: Returns all services, including inactive ones, ordered by name.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ServicesResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: List services
+      tags:
+      - services
+swagger: "2.0"
