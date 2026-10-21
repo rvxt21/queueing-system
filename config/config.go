@@ -28,6 +28,9 @@ type RabbitMQ struct {
 	Port     string `env:"RABBITMQ_PORT"                  envDefault:"5672"`
 	User     string `env:"RABBITMQ_DEFAULT_USER,required"`
 	Password string `env:"RABBITMQ_DEFAULT_PASS,required"`
+
+	Exchange       string        `env:"RABBITMQ_EXCHANGE"        envDefault:"tickets"`
+	PublishTimeout time.Duration `env:"RABBITMQ_PUBLISH_TIMEOUT" envDefault:"5s"` // max wait for a confirm
 }
 
 type Postgres struct {
