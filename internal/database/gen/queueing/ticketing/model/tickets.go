@@ -8,15 +8,16 @@
 package model
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Tickets struct {
-	ID        uuid.UUID `sql:"primary_key"`
-	Number    string
-	Service   string
-	Status    string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          uuid.UUID `sql:"primary_key"`
+	Number      string
+	ServiceCode string
+	Status      string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }

@@ -17,12 +17,12 @@ type ticketsTable struct {
 	postgres.Table
 
 	// Columns
-	ID        postgres.ColumnString
-	Number    postgres.ColumnString
-	Service   postgres.ColumnString
-	Status    postgres.ColumnString
-	CreatedAt postgres.ColumnTimestampz
-	UpdatedAt postgres.ColumnTimestampz
+	ID          postgres.ColumnString
+	Number      postgres.ColumnString
+	ServiceCode postgres.ColumnString
+	Status      postgres.ColumnString
+	CreatedAt   postgres.ColumnTimestampz
+	UpdatedAt   postgres.ColumnTimestampz
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -64,27 +64,27 @@ func newTicketsTable(schemaName, tableName, alias string) *TicketsTable {
 
 func newTicketsTableImpl(schemaName, tableName, alias string) ticketsTable {
 	var (
-		IDColumn        = postgres.StringColumn("id")
-		NumberColumn    = postgres.StringColumn("number")
-		ServiceColumn   = postgres.StringColumn("service")
-		StatusColumn    = postgres.StringColumn("status")
-		CreatedAtColumn = postgres.TimestampzColumn("created_at")
-		UpdatedAtColumn = postgres.TimestampzColumn("updated_at")
-		allColumns      = postgres.ColumnList{IDColumn, NumberColumn, ServiceColumn, StatusColumn, CreatedAtColumn, UpdatedAtColumn}
-		mutableColumns  = postgres.ColumnList{NumberColumn, ServiceColumn, StatusColumn, CreatedAtColumn, UpdatedAtColumn}
-		defaultColumns  = postgres.ColumnList{IDColumn, StatusColumn, CreatedAtColumn, UpdatedAtColumn}
+		IDColumn          = postgres.StringColumn("id")
+		NumberColumn      = postgres.StringColumn("number")
+		ServiceCodeColumn = postgres.StringColumn("service_code")
+		StatusColumn      = postgres.StringColumn("status")
+		CreatedAtColumn   = postgres.TimestampzColumn("created_at")
+		UpdatedAtColumn   = postgres.TimestampzColumn("updated_at")
+		allColumns        = postgres.ColumnList{IDColumn, NumberColumn, ServiceCodeColumn, StatusColumn, CreatedAtColumn, UpdatedAtColumn}
+		mutableColumns    = postgres.ColumnList{NumberColumn, ServiceCodeColumn, StatusColumn, CreatedAtColumn, UpdatedAtColumn}
+		defaultColumns    = postgres.ColumnList{IDColumn, StatusColumn, CreatedAtColumn, UpdatedAtColumn}
 	)
 
 	return ticketsTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		ID:        IDColumn,
-		Number:    NumberColumn,
-		Service:   ServiceColumn,
-		Status:    StatusColumn,
-		CreatedAt: CreatedAtColumn,
-		UpdatedAt: UpdatedAtColumn,
+		ID:          IDColumn,
+		Number:      NumberColumn,
+		ServiceCode: ServiceCodeColumn,
+		Status:      StatusColumn,
+		CreatedAt:   CreatedAtColumn,
+		UpdatedAt:   UpdatedAtColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,
