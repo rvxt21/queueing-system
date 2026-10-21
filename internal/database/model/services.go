@@ -11,15 +11,20 @@ func (s Services) ToDomain() []domain.Service {
 	res := make([]domain.Service, len(s))
 
 	for i := range s {
-		res[i] = domain.Service{
-			ID:          s[i].ID,
-			ServiceCode: s[i].ServiceCode,
-			Name:        s[i].Name,
-			IsActive:    s[i].IsActive,
-			CreatedAt:   s[i].CreatedAt,
-			UpdatedAt:   s[i].UpdatedAt,
-		}
+		res[i] = ServiceToDomain(s[i])
 	}
 
 	return res
+}
+
+func ServiceToDomain(s model.Services) domain.Service {
+	return domain.Service{
+		ID:          s.ID,
+		ServiceCode: s.ServiceCode,
+		Name:        s.Name,
+		Prefix:      s.Prefix,
+		IsActive:    s.IsActive,
+		CreatedAt:   s.CreatedAt,
+		UpdatedAt:   s.UpdatedAt,
+	}
 }

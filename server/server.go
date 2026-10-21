@@ -39,6 +39,7 @@ func (s *Server) Start(ctx context.Context) error {
 	router.Use(gin.Logger(), gin.Recovery())
 
 	router.GET("/services", s.handlers.GetServices)
+	router.POST("/tickets", s.handlers.RequestService)
 	router.GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 
 	s.httpServer = &http.Server{

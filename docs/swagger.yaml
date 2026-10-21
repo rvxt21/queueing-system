@@ -1,5 +1,13 @@
 basePath: /
 definitions:
+  dto.RequestServiceRequest:
+    properties:
+      service_code:
+        example: passport_new
+        type: string
+    required:
+    - service_code
+    type: object
   dto.ServicesResponse:
     properties:
       id:
@@ -14,6 +22,22 @@ definitions:
         type: string
       service_code:
         example: passport_new
+        type: string
+    type: object
+  dto.TicketResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      number:
+        example: PN-042
+        type: string
+      service_code:
+        example: passport_new
+        type: string
+      status:
+        example: new
         type: string
     type: object
   handlers.errorResponse:
@@ -46,4 +70,43 @@ paths:
       summary: List services
       tags:
       - services
+  /tickets:
+    post:
+      consumes:
+      - application/json
+      description: Customer chooses a service and receives a ticket number, e.g. PN-042.
+        Numbers restart from 001 every day.
+      parameters:
+      - description: Service to request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RequestServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.TicketResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "404":
+          description: Service not found
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "409":
+          description: Service is not active
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.errorResponse'
+      summary: Request a service
+      tags:
+      - tickets
 swagger: "2.0"

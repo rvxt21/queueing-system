@@ -36,9 +36,79 @@
                     }
                 }
             }
+        },
+        "/tickets": {
+            "post": {
+                "description": "Customer chooses a service and receives a ticket number, e.g. PN-042. Numbers restart from 001 every day.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "Request a service",
+                "parameters": [
+                    {
+                        "description": "Service to request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RequestServiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TicketResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Service not found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Service is not active",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.errorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "dto.RequestServiceRequest": {
+            "type": "object",
+            "required": [
+                "service_code"
+            ],
+            "properties": {
+                "service_code": {
+                    "type": "string",
+                    "example": "passport_new"
+                }
+            }
+        },
         "dto.ServicesResponse": {
             "type": "object",
             "properties": {
@@ -58,6 +128,29 @@
                 "service_code": {
                     "type": "string",
                     "example": "passport_new"
+                }
+            }
+        },
+        "dto.TicketResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "number": {
+                    "type": "string",
+                    "example": "PN-042"
+                },
+                "service_code": {
+                    "type": "string",
+                    "example": "passport_new"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "new"
                 }
             }
         },
