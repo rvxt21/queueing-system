@@ -20,4 +20,5 @@ type Services struct {
 	IsActive    bool
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	Prefix      string
 }

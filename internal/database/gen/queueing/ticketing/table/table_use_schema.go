@@ -11,5 +11,6 @@ package table
 // this method only once at the beginning of the program.
 func UseSchema(schema string) {
 	Services = Services.FromSchema(schema)
+	TicketCounters = TicketCounters.FromSchema(schema)
 	Tickets = Tickets.FromSchema(schema)
 }

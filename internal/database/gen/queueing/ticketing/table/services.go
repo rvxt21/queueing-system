@@ -23,6 +23,7 @@ type servicesTable struct {
 	IsActive    postgres.ColumnBool
 	CreatedAt   postgres.ColumnTimestampz
 	UpdatedAt   postgres.ColumnTimestampz
+	Prefix      postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -70,8 +71,9 @@ func newServicesTableImpl(schemaName, tableName, alias string) servicesTable {
 		IsActiveColumn    = postgres.BoolColumn("is_active")
 		CreatedAtColumn   = postgres.TimestampzColumn("created_at")
 		UpdatedAtColumn   = postgres.TimestampzColumn("updated_at")
-		allColumns        = postgres.ColumnList{IDColumn, ServiceCodeColumn, NameColumn, IsActiveColumn, CreatedAtColumn, UpdatedAtColumn}
-		mutableColumns    = postgres.ColumnList{ServiceCodeColumn, NameColumn, IsActiveColumn, CreatedAtColumn, UpdatedAtColumn}
+		PrefixColumn      = postgres.StringColumn("prefix")
+		allColumns        = postgres.ColumnList{IDColumn, ServiceCodeColumn, NameColumn, IsActiveColumn, CreatedAtColumn, UpdatedAtColumn, PrefixColumn}
+		mutableColumns    = postgres.ColumnList{ServiceCodeColumn, NameColumn, IsActiveColumn, CreatedAtColumn, UpdatedAtColumn, PrefixColumn}
 		defaultColumns    = postgres.ColumnList{IDColumn, IsActiveColumn, CreatedAtColumn, UpdatedAtColumn}
 	)
 
@@ -85,6 +87,7 @@ func newServicesTableImpl(schemaName, tableName, alias string) servicesTable {
 		IsActive:    IsActiveColumn,
 		CreatedAt:   CreatedAtColumn,
 		UpdatedAt:   UpdatedAtColumn,
+		Prefix:      PrefixColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,
