@@ -44,8 +44,11 @@ func (p *Postgres) CreateTicket(
 		}
 
 		created, err = insertTicket(ctx, tx, ticket)
+		if err != nil {
+			return err
+		}
 
-		return err
+		return insertTicketCreatedEvent(ctx, tx, created)
 	})
 	if err != nil {
 		return nil, err
