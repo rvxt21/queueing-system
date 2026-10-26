@@ -8,4 +8,5 @@ import (
 
 type ServicesService interface {
 	ListServices(ctx context.Context) ([]domain.Service, error)
+	RequestService(ctx context.Context, serviceCode string) (*domain.Ticket, error)
 }

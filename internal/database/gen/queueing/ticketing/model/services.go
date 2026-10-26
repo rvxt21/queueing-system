@@ -8,9 +8,8 @@
 package model
 
 import (
-	"time"
-
 	"github.com/google/uuid"
+	"time"
 )
 
 type Services struct {
@@ -20,4 +19,5 @@ type Services struct {
 	IsActive    bool
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	Prefix      string
 }
