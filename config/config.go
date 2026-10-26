@@ -12,6 +12,7 @@ type Config struct {
 	RabbitMQ
 	Postgres
 	HTTP
+	Outbox
 
 	LogLevel string `env:"LOG_LEVEL" envDefault:"info"`
 }
@@ -40,6 +41,11 @@ type Postgres struct {
 	Password string `env:"POSTGRES_PASSWORD,required"`
 	Database string `env:"POSTGRES_DB,required"`
 	SSLMode  string `env:"POSTGRES_SSL_MODE"          envDefault:"disable"`
+}
+
+type Outbox struct {
+	PollInterval time.Duration `env:"OUTBOX_POLL_INTERVAL" envDefault:"5s"`
+	BatchSize    int64         `env:"OUTBOX_BATCH_SIZE"    envDefault:"50"`
 }
 
 func LoadConfig() (*Config, error) {
