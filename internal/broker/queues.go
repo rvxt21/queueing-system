@@ -2,6 +2,7 @@ package broker
 
 import (
 	"fmt"
+	"slices"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -20,6 +21,11 @@ var ticketQueues = []string{
 	QueueTransport,
 	QueueCivil,
 	QueueResidence,
+}
+
+// Queues returns the names of all ticket queues.
+func Queues() []string {
+	return slices.Clone(ticketQueues)
 }
 
 var serviceQueues = map[string]string{
