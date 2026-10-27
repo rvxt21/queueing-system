@@ -14,6 +14,9 @@ import (
 	"github.com/rvxt21/queueing-system/internal/domain"
 )
 
+// simulatedWork stands in for real ticket processing.
+const simulatedWork = 15 * time.Second
+
 type Worker struct {
 	br     Broker
 	repo   Repository
@@ -31,7 +34,7 @@ func NewWorker(br Broker, repo Repository, log *slog.Logger, cfg *config.Config)
 		br:     br,
 		log:    log,
 		repo:   repo,
-		count:  cfg.Workers.Count,
+		count:  cfg.Count,
 		queues: broker.Queues(),
 	}
 }
@@ -63,10 +66,7 @@ func (w *Worker) work(ctx context.Context) {
 
 	for i := range w.count {
 		for _, queue := range w.queues {
-			w.wg.Add(1)
-			go func() {
-				defer w.wg.Done()
-
+			w.wg.Go(func() {
 				tag := fmt.Sprintf("%s-worker-%d", queue, i) // e.g. "tickets.tax-worker-0"
 
 				deliveries, err := w.br.Consume(ctx, queue, tag)
@@ -89,12 +89,14 @@ func (w *Worker) work(ctx context.Context) {
 						if err := json.Unmarshal(msg.Body, &event); err != nil {
 							w.log.Error("decode ticket event", slog.String("message_id", msg.MessageID), slog.Any("err", err))
 							_ = msg.Nack(false)
+
 							continue
 						}
 
 						w.log.Info("working on a ticket", slog.String("ticket_number", event.Number))
+
 						select {
-						case <-time.After(15 * time.Second): // simulated work
+						case <-time.After(simulatedWork):
 						case <-ctx.Done():
 							_ = msg.Nack(true) // shutting down, put it back in the queue
 							return
@@ -104,13 +106,14 @@ func (w *Worker) work(ctx context.Context) {
 						if err != nil {
 							w.log.Error("update ticket status", slog.String("message_id", msg.MessageID), slog.Any("err", err))
 							_ = msg.Nack(!errors.Is(err, domain.ErrTicketNotFound))
+
 							continue
 						}
+
 						_ = msg.Ack()
 					}
 				}
-
-			}()
+			})
 		}
 	}
 }

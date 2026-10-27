@@ -36,7 +36,7 @@ func (r *RabbitMQ) Consume(ctx context.Context, queue, consumerTag string) (<-ch
 
 	go func() {
 		defer close(out)
-		defer ch.Close()
+		defer func() { _ = ch.Close() }()
 
 		for {
 			select {
