@@ -11,6 +11,7 @@ var (
 	ErrCreateOutbox           = errors.New("error creating outbox event")
 	ErrGetOutboxes            = errors.New("error get outboxes events")
 	ErrMarkOutbox             = errors.New("error marking outbox event")
+	ErrUpdateTicketStatus     = errors.New("error updating ticket status")
 	ErrLockTicketCounter      = errors.New("error locking ticket counter")
 	ErrSaveTicketCounter      = errors.New("error saving ticket counter")
 	ErrNoTicketToCreate       = errors.New("createFn returned no ticket")

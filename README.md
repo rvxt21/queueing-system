@@ -1,6 +1,6 @@
 # Queueing System
 
-A ticket queue system for government offices and other public service points, where people take a number and wait to be called. A visitor picks the service they need, gets a ticket number like `PN-042`, and waits in line. Tickets are sent to RabbitMQ, where workers will pick them up and process them.
+A ticket queue system for government offices and other public service points, where people take a number and wait to be called. A visitor picks the service they need, gets a ticket number like `PN-042`, and waits in line. Tickets are sent to RabbitMQ, where workers pick them up, process them and mark them as resolved.
 
 The project's focus is reliable delivery: every ticket that is created is guaranteed to reach the queue, even if RabbitMQ is down when the ticket is issued. This is done with the **transactional outbox pattern**.
 
@@ -13,7 +13,8 @@ flowchart LR
     W[Outbox worker] -->|poll every 5s| DB
     W -->|publish with confirms| X{{tickets exchange}}
     X -->|routing key = service code| Q[(Queues per department)]
-    Q -.->|planned| P[Ticket workers]
+    Q -->|prefetch 1| P[Ticket workers]
+    P -->|status = resolved| DB
 ```
 
 1. **Request a service.** The client sends a service code, such as `passport_new`.
@@ -23,6 +24,7 @@ flowchart LR
    - inserts a `ticket.created` event into the `outbox` table.
 3. **Publish.** A background worker reads unpublished outbox rows in creation order and publishes each one to RabbitMQ, waiting for a publisher confirm. On success the row is marked as published; on failure the attempt count and error are saved, and the row is retried on the next poll.
 4. **Route.** The `tickets` direct exchange routes each message by service code to its department queue.
+5. **Process.** Ticket workers consume each department queue, process the ticket (currently simulated with a 15-second wait) and set its status to `resolved`. Only then is the message acked.
 
 ### Why an outbox
 
@@ -120,6 +122,20 @@ Each service is routed to one department queue:
 | `tickets.civil` | birth and marriage certificates, marriage registration, criminal record |
 | `tickets.residence` | address registration and deregistration, building permits, complaints |
 
+Each queue has `WORKERS_COUNT` consumers. Every consumer has its own channel and a prefetch of 1, so it holds one ticket at a time and RabbitMQ hands the next ticket to whichever consumer is free. A busy queue never slows down the others.
+
+How a worker settles a message:
+
+| Outcome | Action |
+|---|---|
+| Ticket processed and marked `resolved` | `ack` |
+| Body is not valid JSON | `nack`, dropped |
+| Ticket doesn't exist in the database | `nack`, dropped |
+| Other database error | `nack`, requeued |
+| App shutting down mid-ticket | `nack`, requeued |
+
+On shutdown the workers stop first and wait for in-flight tickets, then the RabbitMQ connection closes.
+
 Messages are JSON with `type` set to the event name (`ticket.created`) and `message_id` set to the event id:
 
 ```json
@@ -137,6 +153,7 @@ All settings come from environment variables (or `.env`). See [`.env.example`](.
 | `RABBITMQ_PUBLISH_TIMEOUT` | `5s` | Max wait for a publisher confirm |
 | `OUTBOX_POLL_INTERVAL` | `5s` | How often the outbox worker checks for new events |
 | `OUTBOX_BATCH_SIZE` | `50` | Max events published per poll |
+| `WORKERS_COUNT` | `1` | Ticket consumers per queue |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn` or `error` |
 
 ## Project layout
@@ -148,10 +165,11 @@ internal/
   domain/              tickets, services, outbox events
   database/            Postgres repository (jet), transactions
     gen/               generated jet models (do not edit)
-  broker/              RabbitMQ connection, exchange, queues, publishing
+  broker/              RabbitMQ connection, exchange, queues, publishing, consuming
   service/
     services/          request a service, list services
     outbox/            outbox worker: polls, publishes, marks events
+    tickets/           ticket workers: consume queues, resolve tickets
 server/                HTTP server and handlers
 migrations/            goose SQL migrations
 docs/                  generated Swagger spec
@@ -161,4 +179,5 @@ docs/                  generated Swagger spec
 
 - **No RabbitMQ reconnect.** If the connection drops, publishing fails until the app restarts. No tickets are lost: events wait in the outbox and go out after the restart.
 - **Single outbox worker.** The worker assumes it is the only instance. Running several would need `SELECT … FOR UPDATE SKIP LOCKED` inside a transaction so they don't publish the same rows.
-- **At-least-once delivery.** Consumers must deduplicate by `MessageId`.
+- **At-least-once delivery.** A ticket can be delivered more than once, for example after a shutdown mid-ticket. Setting the status to `resolved` is safe to repeat, so duplicates do no harm today. Workers with side effects would need to deduplicate by `MessageId`.
+- **No retry limit.** Messages that fail with a temporary error are requeued right away, with no delay or limit. A dead-letter queue would stop a failing message from being retried forever.

@@ -13,6 +13,7 @@ type Config struct {
 	Postgres
 	HTTP
 	Outbox
+	Workers
 
 	LogLevel string `env:"LOG_LEVEL" envDefault:"info"`
 }
@@ -46,6 +47,10 @@ type Postgres struct {
 type Outbox struct {
 	PollInterval time.Duration `env:"OUTBOX_POLL_INTERVAL" envDefault:"5s"`
 	BatchSize    int64         `env:"OUTBOX_BATCH_SIZE"    envDefault:"50"`
+}
+
+type Workers struct {
+	Count int `env:"WORKERS_COUNT" envDefault:"1"` // consumers per queue
 }
 
 func LoadConfig() (*Config, error) {
