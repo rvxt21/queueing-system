@@ -12,7 +12,7 @@ func (r *RabbitMQ) Publish(ctx context.Context, msg *domain.Outbox) error {
 	ctx, cancel := context.WithTimeout(ctx, r.config.PublishTimeout)
 	defer cancel()
 
-	confirmation, err := r.ch.PublishWithDeferredConfirmWithContext(ctx,
+	confirmation, err := r.currentCh().PublishWithDeferredConfirmWithContext(ctx,
 		r.config.Exchange, // exchange
 		msg.RoutingKey,    // routing key
 		false,             // mandatory

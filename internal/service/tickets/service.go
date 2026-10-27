@@ -14,8 +14,12 @@ import (
 	"github.com/rvxt21/queueing-system/internal/domain"
 )
 
-// simulatedWork stands in for real ticket processing.
-const simulatedWork = 15 * time.Second
+const (
+	simulatedWork       = 15 * time.Second // simulatedWork stands in for real ticket processing.
+	reconnectMinBackoff = time.Second
+	reconnectMaxBackoff = 30 * time.Second
+	reconnectBackoffMul = 2
+)
 
 type Worker struct {
 	br     Broker
@@ -76,13 +80,49 @@ func (w *Worker) work(ctx context.Context) {
 					return
 				}
 
+				w.log.Info("consumer started", slog.String("queue", queue), slog.String("tag", tag))
+
 				for {
 					select {
 					case <-ctx.Done():
 						return
 					case msg, ok := <-deliveries:
 						if !ok {
-							return
+							if ctx.Err() != nil {
+								return
+							}
+
+							w.log.Warn("consumer lost, resubscribing", slog.String("tag", tag))
+
+							backoff := reconnectMinBackoff
+
+							for attempt := 1; ; attempt++ {
+								deliveries, err = w.br.Consume(ctx, queue, tag)
+								if err == nil {
+									w.log.Info("consumer started",
+										slog.String("queue", queue),
+										slog.String("tag", tag),
+										slog.Int("attempts", attempt))
+
+									break
+								}
+
+								w.log.Warn("resubscribe failed",
+									slog.String("tag", tag),
+									slog.Int("attempt", attempt),
+									slog.Duration("retry_in", backoff),
+									slog.Any("err", err))
+
+								select {
+								case <-ctx.Done():
+									return
+								case <-time.After(backoff):
+								}
+
+								backoff = min(backoff*reconnectBackoffMul, reconnectMaxBackoff)
+							}
+
+							continue
 						}
 
 						var event domain.TicketCreatedEvent
@@ -93,7 +133,12 @@ func (w *Worker) work(ctx context.Context) {
 							continue
 						}
 
-						w.log.Info("working on a ticket", slog.String("ticket_number", event.Number))
+						started := time.Now()
+
+						w.log.Info("ticket processing started",
+							slog.String("ticket_id", event.ID.String()),
+							slog.String("ticket_number", event.Number),
+							slog.String("tag", tag))
 
 						select {
 						case <-time.After(simulatedWork):
@@ -104,13 +149,28 @@ func (w *Worker) work(ctx context.Context) {
 
 						err := w.repo.UpdateTicketStatus(ctx, event.ID, domain.TicketStatusResolved)
 						if err != nil {
-							w.log.Error("update ticket status", slog.String("message_id", msg.MessageID), slog.Any("err", err))
+							w.log.Error("update ticket status",
+								slog.String("ticket_id", event.ID.String()),
+								slog.String("ticket_number", event.Number),
+								slog.Any("err", err))
 							_ = msg.Nack(!errors.Is(err, domain.ErrTicketNotFound))
 
 							continue
 						}
 
-						_ = msg.Ack()
+						if err := msg.Ack(); err != nil {
+							w.log.Warn("ack failed, ticket will be redelivered",
+								slog.String("ticket_id", event.ID.String()),
+								slog.String("ticket_number", event.Number),
+								slog.Any("err", err))
+
+							continue
+						}
+
+						w.log.Info("ticket resolved",
+							slog.String("ticket_id", event.ID.String()),
+							slog.String("ticket_number", event.Number),
+							slog.Duration("took", time.Since(started).Round(time.Millisecond)))
 					}
 				}
 			})

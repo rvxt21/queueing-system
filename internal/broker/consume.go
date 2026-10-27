@@ -9,7 +9,7 @@ import (
 )
 
 func (r *RabbitMQ) Consume(ctx context.Context, queue, consumerTag string) (<-chan domain.Delivery, error) {
-	ch, err := r.conn.Channel()
+	ch, err := r.currentConn().Channel()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrOpenChannel, err)
 	}
