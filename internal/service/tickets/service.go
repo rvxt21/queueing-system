@@ -25,6 +25,7 @@ const (
 type Worker struct {
 	br     Broker
 	repo   Repository
+	notify Notifier
 	log    *slog.Logger
 	queues []string
 	count  int
@@ -34,11 +35,12 @@ type Worker struct {
 	done   chan struct{}
 }
 
-func NewWorker(br Broker, repo Repository, log *slog.Logger, cfg *config.Config) *Worker {
+func NewWorker(br Broker, repo Repository, notify Notifier, log *slog.Logger, cfg *config.Config) *Worker {
 	return &Worker{
 		br:     br,
 		log:    log,
 		repo:   repo,
+		notify: notify,
 		count:  cfg.Count,
 		queues: broker.Queues(),
 	}
@@ -166,6 +168,8 @@ func (w *Worker) processMessage(ctx context.Context, msg domain.Delivery, tag st
 		return
 	}
 
+	w.publishStatus(event, domain.TicketStatusDelivered, tag)
+
 	w.log.Info("ticket processing started",
 		slog.String("ticket_id", event.ID.String()),
 		slog.String("ticket_number", event.Number),
@@ -198,6 +202,8 @@ func (w *Worker) processMessage(ctx context.Context, msg domain.Delivery, tag st
 		return
 	}
 
+	w.publishStatus(event, domain.TicketStatusResolved, tag)
+
 	if err := msg.Ack(); err != nil {
 		w.log.Warn("ack failed, ticket will be redelivered",
 			slog.String("ticket_id", event.ID.String()),
@@ -223,5 +229,19 @@ func (w *Worker) revertToSent(ctx context.Context, event domain.TicketCreatedEve
 			slog.String("ticket_id", event.ID.String()),
 			slog.String("ticket_number", event.Number),
 			slog.Any("err", err))
+
+		return
 	}
+
+	w.publishStatus(event, domain.TicketStatusSent, "")
+}
+
+func (w *Worker) publishStatus(event domain.TicketCreatedEvent, status domain.TicketStatus, worker string) {
+	w.notify.Publish(domain.TicketStatusChanged{
+		ID:          event.ID,
+		Number:      event.Number,
+		ServiceCode: event.ServiceCode,
+		Status:      status,
+		Worker:      worker,
+	})
 }
