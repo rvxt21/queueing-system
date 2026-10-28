@@ -40,6 +40,7 @@ func (s *Server) Start(ctx context.Context) error {
 
 	router.GET("/services", s.handlers.GetServices)
 	router.POST("/tickets", s.handlers.RequestService)
+	router.GET("/tickets/subscribe", s.handlers.SubscribeTickets)
 	router.GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 
 	s.httpServer = &http.Server{

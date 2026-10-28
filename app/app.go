@@ -4,6 +4,7 @@ import (
 	"github.com/rvxt21/queueing-system/config"
 	"github.com/rvxt21/queueing-system/internal/broker"
 	"github.com/rvxt21/queueing-system/internal/database"
+	"github.com/rvxt21/queueing-system/internal/service/hub"
 	"github.com/rvxt21/queueing-system/internal/service/outbox"
 	"github.com/rvxt21/queueing-system/internal/service/services"
 	"github.com/rvxt21/queueing-system/internal/service/tickets"
@@ -36,6 +37,11 @@ func App(cfg *config.Config) *fx.App {
 			fx.Annotate(
 				services.NewService,
 				fx.As(new(handlers.ServicesService)),
+			),
+			fx.Annotate(
+				hub.NewHub,
+				fx.As(fx.Self()),
+				fx.As(new(tickets.Notifier)),
 			),
 			handlers.NewHandler,
 			server.NewServer,
